@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
-import { addUser, removeUser } from "./users";
+import { addUser, getUserById, removeUser, USER } from "./users";
 
 const app = express();
 app.use(cors());
@@ -25,12 +25,33 @@ io.on("connection", (socket) => {
     if (error) {
       callback(error);
     }
+
+    socket.join(room);
+    socket.emit("message", {
+      user: "System",
+      text: `welcome ${name} to ${room}.`,
+    });
+
+    socket.broadcast.to(room).emit("message", {
+      user: "System",
+      text: `${name} just joined inside ${room}.`,
+    });
+
     callback();
   });
 
+  socket.on("message", (message) => {});
+
   socket.on("disconnect", () => {
     console.log("user disconnected:", socket.id);
+    const user: USER = getUserById(socket.id);
+
     removeUser(socket.id);
+
+    socket.broadcast.to(user.room).emit("message", {
+      user: "System",
+      text: `${user.name} just joined inside ${user.room}.`,
+    });
   });
 });
 

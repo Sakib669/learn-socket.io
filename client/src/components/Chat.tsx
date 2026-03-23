@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { Badge } from "./ui/badge";
@@ -9,9 +9,16 @@ import { Send, X } from "lucide-react";
 
 interface Props {}
 
-let socket:Socket;
+type Message = {
+  user: string;
+  text: string;
+};
+
+let socket: Socket;
 const Chat = ({}: Props) => {
   const [searchParams] = useSearchParams();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const name = searchParams.get("name");
   const room = searchParams.get("room");
@@ -19,17 +26,23 @@ const Chat = ({}: Props) => {
   useEffect(() => {
     socket = io("http://localhost:5000");
 
-    socket.emit("", { name, room }, (error: string) => {
+    socket.emit("join", { name, room }, (error: string) => {
       if (error) {
         alert(error);
       }
+    });
+
+    socket.on("message", (message) => {
+      setMessages((existingMessages) => [...existingMessages, message]);
     });
   }, []);
 
   const sendMessage = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && e.currentTarget.value) {
       socket.emit("message", e.currentTarget.value);
-      e.currentTarget.value = ""
+      if (inputRef.current) {
+        inputRef.current.value = ""; // ← clears it properly
+      }
     }
   };
 
@@ -61,19 +74,25 @@ const Chat = ({}: Props) => {
           <div className="self-start max-w-[75%] bg-white/10 border border-white/10 text-white/80 text-sm px-4 py-2.5 rounded-2xl rounded-tl-sm">
             Test Message
           </div>
+          {messages?.map((message: Message, index) => (
+            <div
+              key={index}
+              className="self-start max-w-[75%] bg-white/10 border border-white/10 text-white/80 text-sm px-4 py-2.5 rounded-2xl rounded-tl-sm"
+            >
+              {message.user} : {message.text}
+            </div>
+          ))}
         </div>
       </ScrollArea>
 
       {/* Input */}
       <div className="flex items-center gap-3 px-4 py-4 rounded-b-2xl border border-white/10 bg-white/5 backdrop-blur-md">
         <Input
-            onKeyDown={sendMessage}
+          ref={inputRef}
+          onKeyDown={sendMessage}
           placeholder="Type a message..."
           className="flex-1 bg-white/5 border-white/10 text-white placeholder-white/20 focus-visible:ring-violet-500 rounded-xl"
         />
-        <Button  className="bg-linear-to-br from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-violet-500/30 px-4">
-          <Send className="w-4 h-4" />
-        </Button>
       </div>
     </div>
   );

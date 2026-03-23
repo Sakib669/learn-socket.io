@@ -1,4 +1,4 @@
-type USER = {
+export type USER = {
   id: string;
   name: string;
   room: string;
@@ -22,13 +22,18 @@ export const addUser = ({ id, name, room }: USER) => {
 
   users.push(user);
 
-  return {user};
+  return { user };
 };
 
-export const removeUser = (id:string) => {
-const index = users.findIndex(user => user.id === id)
+export const removeUser = (id: string) => {
+  const index = users.findIndex((user) => user.id === id);
 
-if(index !== -1){
-    return users.splice(index, 1)[0]
-}
+  if (index !== -1) {
+    return users.splice(index, 1)[0];
+  }
+};
+
+export const getUserById = (id: string) => {
+  const user = users.find((user) => user.id === id);
+  return user;
 };
