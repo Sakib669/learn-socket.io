@@ -20,13 +20,13 @@ const Join = ({}: Props) => {
     const { name, room } = data;
     navigate(`/chat?name=${name}&room=${room}`);
   };
-
+ 
   return (
     <div className="w-full max-w-md px-4">
       {/* Card */}
       <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl">
         {/* Glow border effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/20 via-transparent to-blue-500/20 pointer-events-none" />
+        <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-violet-500/20 via-transparent to-blue-500/20 pointer-events-none" />
 
         {/* Header */}
         <div className="mb-8 text-center">
