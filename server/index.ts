@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
-import { addUser, getUserById, removeUser, USER } from "./users";
+import { addUser, getRoomUsers, getUserById, removeUser, USER } from "./users";
 
 const app = express();
 app.use(cors());
@@ -37,12 +37,18 @@ io.on("connection", (socket) => {
       text: `${name} just joined inside ${room}.`,
     });
 
+    const roomUsers = getRoomUsers(room);
+
+    io.to(room).emit("userList", {
+      roomUsers,
+    });
+
     callback();
   });
 
   socket.on("message", (message) => {
     const user = getUserById(socket.id);
-    console.log('user message', user)
+    console.log("user message", user);
 
     if (user) {
       io.to(user.room).emit("message", {
@@ -59,6 +65,12 @@ io.on("connection", (socket) => {
       io.to(user.room).emit("message", {
         user: "System",
         text: `${user.name} just left ${user.room}.`,
+      });
+
+      const roomUsers = getRoomUsers(user.room);
+
+      io.to(user.room).emit("userList", {
+        roomUsers,
       });
     }
   });
