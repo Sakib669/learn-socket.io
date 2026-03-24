@@ -23,7 +23,7 @@ io.on("connection", (socket) => {
     const { error, user } = addUser({ id: socket.id, name, room });
 
     if (error) {
-      callback(error);
+      return callback(error);
     }
 
     socket.join(room);
@@ -40,18 +40,27 @@ io.on("connection", (socket) => {
     callback();
   });
 
-  socket.on("message", (message) => {});
+  socket.on("message", (message) => {
+    const user = getUserById(socket.id);
+    console.log('user message', user)
+
+    if (user) {
+      io.to(user.room).emit("message", {
+        user: user.name,
+        text: message,
+      });
+    }
+  });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected:", socket.id);
-    const user: USER = getUserById(socket.id);
+    const user = removeUser(socket.id);
 
-    removeUser(socket.id);
-
-    socket.broadcast.to(user.room).emit("message", {
-      user: "System",
-      text: `${user.name} just joined inside ${user.room}.`,
-    });
+    if (user) {
+      io.to(user.room).emit("message", {
+        user: "System",
+        text: `${user.name} just left ${user.room}.`,
+      });
+    }
   });
 });
 

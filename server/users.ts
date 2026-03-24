@@ -10,7 +10,7 @@ export const addUser = ({ id, name, room }: USER) => {
   name = name.trim().toLowerCase();
   room = room.trim().toLowerCase();
 
-  const existingUser = users.map(
+  const existingUser = users.find(
     (user) => user.name === name && user.room === room,
   );
 

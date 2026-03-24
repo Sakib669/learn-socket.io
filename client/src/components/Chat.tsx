@@ -35,6 +35,10 @@ const Chat = ({}: Props) => {
     socket.on("message", (message) => {
       setMessages((existingMessages) => [...existingMessages, message]);
     });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const sendMessage = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -47,9 +51,9 @@ const Chat = ({}: Props) => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto h-[calc(100vh-73px)]">
+    <div className="flex flex-col w-full max-w-2xl mx-auto h-[calc(100vh-73px)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 rounded-t-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+      <div className="shrink-0 flex items-center justify-between px-6 py-4 rounded-t-2xl border border-white/10 bg-white/5 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-emerald-400 shadow shadow-emerald-400/50" />
           <span className="text-white font-semibold text-sm">Room:</span>
@@ -69,24 +73,51 @@ const Chat = ({}: Props) => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-6 py-4 border-x border-white/10 bg-white/2">
+      <ScrollArea className="flex-1 min-h-0 px-6 py-4 border-x border-white/10 bg-white/2">
         <div className="flex flex-col gap-3">
-          <div className="self-start max-w-[75%] bg-white/10 border border-white/10 text-white/80 text-sm px-4 py-2.5 rounded-2xl rounded-tl-sm">
-            Test Message
-          </div>
-          {messages?.map((message: Message, index) => (
-            <div
-              key={index}
-              className="self-start max-w-[75%] bg-white/10 border border-white/10 text-white/80 text-sm px-4 py-2.5 rounded-2xl rounded-tl-sm"
-            >
-              {message.user} : {message.text}
-            </div>
-          ))}
+          {messages?.map((message: Message, index) => {
+            const isSelf = message.user === name;
+            const isSystem = message.user === "System";
+
+            // System messages
+            if (isSystem) {
+              return (
+                <div key={index} className="flex justify-center">
+                  <span className="text-white/30 text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                    {message.text}
+                  </span>
+                </div>
+              );
+            }
+
+            // Self or other messages
+            return (
+              <div
+                key={index}
+                className={`flex flex-col gap-1 ${isSelf ? "items-end" : "items-start"}`}
+              >
+                {!isSelf && (
+                  <span className="text-white/40 text-xs px-1">
+                    {message.user}
+                  </span>
+                )}
+                <div
+                  className={`max-w-[75%] text-sm px-4 py-2.5 rounded-2xl ${
+                    isSelf
+                      ? "bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm shadow-lg shadow-violet-500/20"
+                      : "bg-white/10 border border-white/10 text-white/80 rounded-tl-sm"
+                  }`}
+                >
+                  {message.text}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
 
       {/* Input */}
-      <div className="flex items-center gap-3 px-4 py-4 rounded-b-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-4 rounded-b-2xl border border-white/10 bg-white/5 backdrop-blur-md">
         <Input
           ref={inputRef}
           onKeyDown={sendMessage}
